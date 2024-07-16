@@ -1,0 +1,104 @@
+{% extends "base.html" %} {% block content %}
+<div class="px-4 py-4 my-5 text-center">
+  <h1 class="display-5 fw-bold text-danger">Upload Your Files</h1>
+  <br/>
+  <strong>Upload your MP3 files securely to our server, ensuring compliance and confidentiality. Enhance operational efficiency with seamless, protected file storage.</strong>
+</div>
+<div class="container mt-5">
+  <div class="row justify-content-center">
+      <div class="col-md-6">
+          <div class="card">
+              <div class="card-header">
+                  <h4 class="card-title">Upload Files</h4>
+              </div>
+              <div class="card-body">
+                  <form id="fileUploadForm" enctype="multipart/form-data">
+                      <div class="form-group">
+                          <label for="fileInput1">Music File: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</label>
+                          <input type="file" class="form-control-file" id="fileInput1" name="file1" required>
+                      </div>
+                      <br/>
+                      <br/>
+                      <div class="form-group">
+                          <label for="fileInput2">Biometric File:&nbsp;&nbsp;</label>
+                          <input type="file" class="form-control-file" id="fileInput2" name="file2" required>
+                      </div>
+                      <br/>
+                      <br/>
+                      <button type="button" class="btn btn-primary" onclick="uploadFiles()">Upload Files</button>
+                  </form>
+              </div>
+          </div>
+      </div>
+  </div>
+</div>
+<br/>
+<div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
+  <a href="{{ url_for('main.home') }}" type="button" class="btn btn-outline-primary btn-lg px-4 gap-3">Home Page</a>
+  <a href="{{url_for('main.decrypt')}}" type="button" class="btn btn-outline-secondary btn-lg px-4">Decrypt and Download</a>
+</div>
+<script>
+  function downloadTxtFile(text) {
+      const blob = new Blob([text], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'secret.cer';
+      document.body.appendChild(a);
+      a.click();
+      console.log("Downloaded")
+      // Clean up
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+  }
+
+  function uploadFiles() {
+    const fileInput1 = document.getElementById('fileInput1').files[0];
+    const fileInput2 = document.getElementById('fileInput2').files[0];
+    const fileType = fileInput1.type;
+    const fileName = fileInput1.name;
+    const fileExtension = fileName.split('.').pop().toLowerCase();
+    const fileType2 = fileInput2.type;
+    const fileName2 = fileInput2.name;
+    const fileExtension2 = fileName2.split('.').pop().toLowerCase();
+
+    if (!fileInput1 || !fileInput2) {
+        alert('Please select both files.');
+        return;
+    }
+    
+    if (fileType !== 'audio/mpeg' && fileExtension !== 'mp3') { 
+        alert('Upload a Valid Mp3 File');
+        return;
+    }
+    if (fileType2 !== 'image/tiff' && fileExtension2 !== 'tif' && fileExtension2 !== 'tiff') {
+        alert('Upload a Valid Tiff File for biometrics.');
+        return;
+    }
+    const formData = new FormData();
+    formData.append('file1', fileInput1);
+    formData.append('file2', fileInput2);
+    // Log FormData entries for debugging
+    for (let [key, value] of formData.entries()) {
+        console.log(`${key}: ${value.name}`);
+    }
+    // Send files to Flask backend using fetch API
+    fetch("/upload", {
+      method: "POST",
+      body: formData,
+    })
+    .then((response) => response.json())
+    .then((data) => {
+      console.log("Upload successful:", data.message);
+      downloadTxtFile(data.message);
+      // Handle success response
+      alert('Files uploaded successfully!');
+    })
+    .catch((error) => {
+      console.error("Error uploading files:", error);
+      // Handle error
+    });
+  }
+</script>
+{% endblock %}

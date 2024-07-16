@@ -1,0 +1,125 @@
+{% extends "base.html" %} {% block content %}
+
+<div class="px-4 py-4 my-5 text-center">
+  <h1 class="display-5 fw-bold text-success">Download Your MP3 Files</h1>
+  <br/>
+  <strong>Access and download your securely stored MP3 files with ease. Ensuring authorized personnel have seamless, protected access to essential data.</strong>
+</div>
+<div class="container mt-5">
+  <div class="row justify-content-center">
+      <div class="col-md-6">
+          <div class="card">
+              <div class="card-header">
+                  <h4 class="card-title">Upload Files For Music Download</h4>
+              </div>
+              <div class="card-body">
+                  <form id="fileUploadForm" enctype="multipart/form-data">
+                      <div class="form-group">
+                          <label for="fileInput1">Certificate File: &nbsp;</label>
+                          <input type="file" class="form-control-file" id="fileInput1" name="file1" required>
+                      </div>
+                      <br/>
+                      <br/>
+                      <div class="form-group">
+                          <label for="fileInput2">Biometric File:&nbsp;&nbsp;</label>
+                          <input type="file" class="form-control-file" id="fileInput2" name="file2" required>
+                      </div>
+                      <br/>
+                      <br/>
+                      <button type="button" class="btn btn-primary" onclick="uploadFiles()">Download File</button>
+                  </form>
+              </div>
+          </div>
+      </div>
+  </div>
+</div>
+<br/>
+<div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
+  <a href="{{url_for('main.encrypt')}}" type="button" class="btn btn-outline-primary btn-lg px-4 gap-3">Encrypt and Upload</a>
+  <a href="{{ url_for('main.home') }}" type="button" class="btn btn-outline-secondary btn-lg px-4">Home Page</a>
+</div>
+<script>
+  function downloadDecryptedMP3(filename) {
+    var downloadUrl = `/download_decrypted_mp3/${filename}`;
+
+    var link = document.createElement('a');
+    link.href = downloadUrl;
+    link.download = `${filename}.mp3`; // Name of the file to download
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+  function uploadFiles() {
+    const fileInput1 = document.getElementById('fileInput1').files[0];
+    const fileInput2 = document.getElementById('fileInput2').files[0];
+    const fileType = fileInput1.type;
+    const fileName = fileInput1.name;
+    const fileExtension = fileName.split('.').pop().toLowerCase();
+    const fileType2 = fileInput2.type;
+    const fileName2 = fileInput2.name;
+    const fileExtension2 = fileName2.split('.').pop().toLowerCase();
+
+    if (!fileInput1 || !fileInput2) {
+        alert('Please select both files.');
+        return;
+    }
+    
+    if (fileType !== 'application/x-x509-ca-cert' && fileExtension !== 'cer') {
+        alert('Upload a Valid .cer File');
+        return;
+    }
+
+    if (fileType2 !== 'image/tiff' && fileExtension2 !== 'tif' && fileExtension2 !== 'tiff') {
+        alert('Upload a Valid Tiff File for biometrics.');
+        return;
+    }
+    const formData = new FormData();
+    formData.append('file1', fileInput1);
+    formData.append('file2', fileInput2);
+    // Log FormData entries for debugging
+    for (let [key, value] of formData.entries()) {
+        console.log(`${key}: ${value.name}`);
+    }
+    // Send files to Flask backend using fetch API
+    fetch("/download", {
+      method: "POST",
+      body: formData,
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.indexOf('application/json') !== -1) {
+        // Response is JSON
+        return response.json()
+          .then(json => {
+            if (json && json.message) {
+              alert(json.message); // Display message from server response
+            }
+          });
+      } else {
+        return response.blob()
+        .then(blob => {
+          var url = window.URL.createObjectURL(blob);
+          var a = document.createElement('a');
+          a.href = url;
+          a.download = 'decrypted.mp3'; // Name of the file to download
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          window.URL.revokeObjectURL(url);
+
+          // Display alert after download initiation
+          alert('File downloaded successfully!');
+        });
+      }
+    }).catch(error => {
+      console.error('Error downloading file:', error);
+    });
+    
+  }
+</script>
+{% endblock %}
+

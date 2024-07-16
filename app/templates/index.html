@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="px-4 py-5 my-5 text-center">
+    <img class="d-block mx-auto mb-4" src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/8b/Cryptocurrency_Logo.svg/3888px-Cryptocurrency_Logo.svg.png" alt="" width="72" height="72">
+    <h1 class="display-5 fw-bold">Music File Secure Portal</h1>
+    <div class="col-lg-6 mx-auto">
+        <p class="lead mb-4">            
+            Secure your files by uploading mp3 files to our server, ensuring confidentiality, 
+            compliance with data protection regulations, 
+            and seamless access for authorized personnel, enhancing data security and operational efficiency.
+        </p>
+      <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
+        <a href="{{url_for('main.encrypt')}}" type="button" class="btn btn-outline-primary btn-lg px-4 gap-3">Encrypt and Upload</a>
+        <a href="{{url_for('main.decrypt')}}" type="button" class="btn btn-outline-secondary btn-lg px-4">Decrypt and Download</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
